@@ -44,8 +44,8 @@ void ledClock(Time &t)
 
   leds[0] = CRGB(10,10,10);
   
-  t.hour %= 12;
-  leds[t.hour] += CRGB(125,0,0);
+  //t.hour %= 12;
+  leds[t.hour % 12] += CRGB(125,0,0);
 
   leds[t.minute / 5] += CRGB(0, gammaCor( 150 - ((t.minute%5) * 60 + t.second)/2 ), 0);
   leds[(t.minute / 5 + 1) % 12] += CRGB(0, gammaCor(((t.minute%5) * 60 + t.second)/2), 0);
