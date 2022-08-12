@@ -19,11 +19,16 @@ const uint8_t CRTgamma[] PROGMEM = {
 
 #define ledShow FastLED.show
 
+byte gammaCor(byte c)
+{
+  return (pgm_read_byte(&CRTgamma[c]));
+}
+
 void ledSet(byte num, CRGB color)
 {
-  leds[num] = CRGB(pgm_read_byte(&CRTgamma[color.r]),
-                   pgm_read_byte(&CRTgamma[color.g]),
-                   pgm_read_byte(&CRTgamma[color.b]));
+  leds[num] = CRGB(gammaCor(color.r),
+                   gammaCor(color.g),
+                   gammaCor(color.b));
 }
 
 void ledFill(CRGB color)
@@ -31,5 +36,20 @@ void ledFill(CRGB color)
   for (byte i = 0; i < NUM_LEDS; i++) {
     ledSet(i, color);
   }
-  ledShow();
+}
+
+void ledClock(Time &t)
+{
+  ledFill(CRGB(0, 0, 0));
+
+  leds[0] = CRGB(10,10,10);
+  
+  t.hour %= 12;
+  leds[t.hour] += CRGB(125,0,0);
+
+  leds[t.minute / 5] += CRGB(0, gammaCor( 150 - ((t.minute%5) * 60 + t.second)/2 ), 0);
+  leds[(t.minute / 5 + 1) % 12] += CRGB(0, gammaCor(((t.minute%5) * 60 + t.second)/2), 0);
+
+  leds[t.second / 5] += CRGB(0, 0, gammaCor( 125 - ((t.second%5) * 1000 + t.ms)/40 ));
+  leds[(t.second / 5 + 1) % 12] += CRGB(0, 0, gammaCor(((t.second%5) * 1000 + t.ms)/40));
 }
