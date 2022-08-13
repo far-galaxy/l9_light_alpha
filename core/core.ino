@@ -5,8 +5,8 @@
 
 #define DEBUG 1
 
-#include <FastLED.h>
 #include "core_utils.h"
+#include "led_utils.h"
 #include "buildTime.h"
 #include <GyverTM1637.h>
 
@@ -18,29 +18,26 @@ const char *ssid     = "LT100D_5556";
 const char *password = "pswd";
 
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600*3);
+NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600 * 3);
 
-#define LED_PIN D5
-#define NUM_LEDS 12
 CRGB leds[NUM_LEDS];
 
 GyverTM1637 disp(D1, D2);
 
 Time t;
+LED led;
 
 void setup() {
 #if DEBUG
   Serial.begin(115200);
 #endif
-  FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
-  FastLED.setBrightness(255);
-  
+
   disp.clear();
   disp.brightness(7);
 
   WiFi.begin(ssid, password);
 
-  while ( WiFi.status() != WL_CONNECTED ) 
+  while ( WiFi.status() != WL_CONNECTED )
   {
     delay ( 500 );
     log ( "." );
@@ -48,7 +45,7 @@ void setup() {
   logln( "!!!" );
   timeClient.begin();
   timeClient.update();
-  
+
   t.hour = timeClient.getHours();
   t.minute = timeClient.getMinutes();
   t.second = timeClient.getSeconds();
@@ -63,7 +60,7 @@ void loop() {
 
   if (now - timer >= 40) {
     timer = now;
-    
+
     t.ms += 40;
 
     if (t.ms >= 1000) {
@@ -76,13 +73,14 @@ void loop() {
     }
     if (t.minute >= 60) {
       t.hour++;
+      t.hour %= 24;
       t.minute = 0;
     }
-    
+
     log(t.hour); log("\t"); log(t.minute); log("\t"); logln(t.second);
-    ledClock(t);
+    led.clock(t);
     disp.displayClock(t.hour, t.minute);
-    disp.point(millis()/500%2);
+    disp.point(millis() / 500 % 2);
     FastLED.show();
   }
 }
