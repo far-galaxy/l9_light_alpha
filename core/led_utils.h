@@ -14,10 +14,12 @@ class LED {
   public:
     LED();
     int bright = 0;
-    CRGB points[12];
+    CRGB points[NUM_LEDS];
+    CRGB end[NUM_LEDS];
     void clock(Time &t);
     void fill(CRGB color);
     byte gammaCor(byte c);
+    void tick();
     void setPoint(byte num, CRGB color);
     void show();
 };
@@ -42,7 +44,7 @@ const uint8_t CRTgamma[256] PROGMEM = {
 };
 
 LED::LED() {
-  FastLED.addLeds<WS2812B, PIN_LEDS, GRB>(points, 12);
+  FastLED.addLeds<WS2812B, PIN_LEDS, GRB>(points, NUM_LEDS);
   FastLED.setBrightness(255);
 }
 
@@ -50,21 +52,21 @@ void LED::clock(Time &t)
 {
   fill(CRGB(0, 0, 0));
 
-  points[0] = CRGB(10, 10, 10);
+  end[0] = CRGB(1, 1, 1);
 
-  points[t.hour % 12] += CRGB(125, 0, 0);
+  end[t.hour % 12] += CRGB(125, 0, 0);
 
-  points[t.minute / 5] += CRGB(0, gammaCor( 150 - ((t.minute % 5) * 60 + t.second) / 2 ), 0);
-  points[(t.minute / 5 + 1) % 12] += CRGB(0, gammaCor(((t.minute % 5) * 60 + t.second) / 2), 0);
+  end[t.minute / 5] += CRGB(0, gammaCor( 150 - ((t.minute % 5) * 60 + t.second) / 2 ), 0);
+  end[(t.minute / 5 + 1) % 12] += CRGB(0, gammaCor(((t.minute % 5) * 60 + t.second) / 2), 0);
 
-  points[t.second / 5] += CRGB(0, 0, gammaCor( 125 - ((t.second % 5) * 1000 + t.ms) / 40 ));
-  points[(t.second / 5 + 1) % 12] += CRGB(0, 0, gammaCor(((t.second % 5) * 1000 + t.ms) / 40));
+  end[t.second / 5] += CRGB(0, 0, gammaCor( 125 - ((t.second % 5) * 1000 + t.ms) / 40 ));
+  end[(t.second / 5 + 1) % 12] += CRGB(0, 0, gammaCor(((t.second % 5) * 1000 + t.ms) / 40));
 }
 
 void LED::fill(CRGB color)
 {
-  for (byte i = 0; i < 12; i++) {
-    setPoint(i, color);
+  ALL(d) {
+    setPoint(d, color);
   }
 }
 
@@ -73,11 +75,23 @@ byte LED::gammaCor(byte c)
   return (pgm_read_byte(&CRTgamma[c]));
 }
 
+#define MOVE(r) if (points[d].r < end[d].r) points[d].r++; else if (points[d].r > end[d].r) points[d].r--;
+
+void LED::tick()
+{
+  ALL(d) {
+    MOVE(r)
+    MOVE(g)
+    MOVE(b)
+  }
+  show();
+}
+
 void LED::setPoint(byte num, CRGB color)
 {
-  points[num] = CRGB(gammaCor(color.r),
-                     gammaCor(color.g),
-                     gammaCor(color.b));
+  end[num] = CRGB(gammaCor(color.r),
+                  gammaCor(color.g),
+                  gammaCor(color.b));
 }
 
 void LED::show()

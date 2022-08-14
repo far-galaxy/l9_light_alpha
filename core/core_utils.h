@@ -13,3 +13,5 @@ struct Time
 #define logln(x)
 #define log(x)
 #endif
+
+#define ALL(index) for(byte index = 0; index < NUM_LEDS; index++)

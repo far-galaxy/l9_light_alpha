@@ -39,13 +39,20 @@ void setup() {
 
   wifi.setTimeOffset(3);
   t = wifi.getTime();
+  led.fill(CRGB::Black);
+  led.show();
+  led.fill(CRGB::Red);
 }
 
-unsigned long timer = 0;
-
 void loop() {
+  static long timer = 0;
+  static long tick = 0;
 
   unsigned long now = millis();
+
+  if (now - tick >= 5){
+    led.tick();
+  }
 
   if (now - timer >= 40) {
     timer = now;
@@ -70,6 +77,5 @@ void loop() {
     led.clock(t);
     disp.displayClock(t.hour, t.minute);
     disp.point(millis() / 500 % 2);
-    FastLED.show();
   }
 }
