@@ -11,8 +11,7 @@
 #include "buildTime.h"
 #include <GyverTM1637.h>
 
-const char *ssid     = "LT100D_5556";
-const char *password = "pswd";
+#include "connection.h"
 
 GyverTM1637 disp(D1, D2);
 
@@ -27,6 +26,8 @@ void setup() {
 
   disp.clear();
   disp.brightness(7);
+
+  wifi.scan();
 
   WiFi.begin(ssid, password);
 
